@@ -43,23 +43,32 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const response = await Tiktok.Downloader(tiktokUrl, { version: "v1" });
+    // Try v2 (ssstik.io) first — uses third-party proxy, more reliable on Vercel
+    let data = await Tiktok.Downloader(tiktokUrl, { version: "v2" });
 
-    if (response.status !== "success" || !response.result) {
+    // Fallback to v1 (TikTok direct API) if v2 fails
+    if (data.status !== "success" || !data.result) {
+      data = await Tiktok.Downloader(tiktokUrl, { version: "v1" }) as typeof data;
+    }
+
+    if (data.status !== "success" || !data.result) {
       return NextResponse.json(
-        { error: response.message || "Gagal mengambil video TikTok" },
+        { error: data.message || "Gagal mengambil video TikTok" },
         { status: 500 }
       );
     }
 
-    const result = response.result;
+    const result = data.result;
 
     // Video type
     if (result.type === "video" && result.video) {
+      const rawResult = result as Record<string, unknown>;
+      const video = result.video as Record<string, unknown>;
+
       const videoUrl =
-        result.videoHD ||
-        pickHttps(result.video.downloadAddr) ||
-        pickHttps(result.video.playAddr);
+        (rawResult.videoHD as string) ||
+        pickHttps(video.downloadAddr as string | string[] | undefined) ||
+        pickHttps(video.playAddr as string | string[] | undefined);
 
       if (!videoUrl) {
         return NextResponse.json(
@@ -68,14 +77,17 @@ export async function GET(request: NextRequest) {
         );
       }
 
+      const thumbnail =
+        pickHttps(video.cover as string | string[] | undefined) ||
+        pickHttps(video.originCover as string | string[] | undefined) ||
+        pickHttps(video.dynamicCover as string | string[] | undefined) ||
+        (result.author as Record<string, unknown>)?.avatar as string ||
+        "";
+
       return NextResponse.json({
         type: "video",
         url: videoUrl,
-        thumbnail:
-          pickHttps(result.video.cover) ||
-          pickHttps(result.video.originCover) ||
-          pickHttps(result.video.dynamicCover) ||
-          "",
+        thumbnail,
         description: result.desc || "",
         author: result.author?.nickname || "",
       });
