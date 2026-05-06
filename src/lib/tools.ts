@@ -19,15 +19,6 @@ export const tools: Tool[] = [
     color: "from-pink-500 to-rose-500",
   },
   {
-    id: "instagram-downloader",
-    name: "Instagram Downloader",
-    description: "Download video Reels, foto, dan carousel dari Instagram dengan kualitas penuh. Paste URL dan download langsung.",
-    icon: "instagram",
-    href: "/tools/instagram-downloader",
-    status: "active",
-    color: "from-purple-500 to-pink-500",
-  },
-  {
     id: "image-compressor",
     name: "Image Compressor",
     description: "Kompres gambar tanpa kehilangan kualitas visual yang signifikan.",

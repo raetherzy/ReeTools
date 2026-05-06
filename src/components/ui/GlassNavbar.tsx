@@ -38,12 +38,6 @@ export function GlassNavbar() {
           >
             TikTok Remover
           </Link>
-          <Link
-            href="/tools/instagram-downloader"
-            className="px-4 py-2 rounded-xl text-sm font-medium bg-white/[0.06] hover:bg-white/[0.1] text-white/80 hover:text-white border border-white/[0.06] hover:border-purple-500/30 transition-all"
-          >
-            Instagram DL
-          </Link>
         </div>
       </div>
     </nav>

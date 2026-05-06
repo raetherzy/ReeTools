@@ -41,7 +41,3 @@ __pycache__/
 *.pyo
 .venv/
 venv/
-
-# instagram cookies (private - never commit)
-backend/instagram_cookies.txt
-instagram_cookies.txt

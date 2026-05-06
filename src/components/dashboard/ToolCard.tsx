@@ -12,7 +12,6 @@ import {
   File,
   ArrowRight,
   Clock,
-  Instagram,
 } from "lucide-react";
 
 const iconMap: Record<string, React.ReactNode> = {
@@ -22,7 +21,6 @@ const iconMap: Record<string, React.ReactNode> = {
   "file-text": <FileText size={28} />,
   scissors: <Scissors size={28} />,
   link: <LinkIcon size={28} />,
-  instagram: <Instagram size={28} />,
 };
 
 function ToolCardContent({ tool, isComingSoon }: { tool: Tool; isComingSoon: boolean }) {
