@@ -18,6 +18,18 @@ const nextConfig = {
         protocol: "https",
         hostname: "*.ibyteimg.com",
       },
+      {
+        protocol: "https",
+        hostname: "*.cdninstagram.com",
+      },
+      {
+        protocol: "https",
+        hostname: "*.fbcdn.net",
+      },
+      {
+        protocol: "https",
+        hostname: "*.instagram.com",
+      },
     ],
   },
 };
