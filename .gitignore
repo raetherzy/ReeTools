@@ -34,3 +34,14 @@ yarn-error.log*
 
 # solution notes (local dev only)
 solution.md
+
+# python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# instagram cookies (private - never commit)
+backend/instagram_cookies.txt
+instagram_cookies.txt

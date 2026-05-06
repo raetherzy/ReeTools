@@ -17,6 +17,36 @@ interface InstagramResponse {
   items?: InstagramItem[];
 }
 
+function isStoryUrl(url: string): boolean {
+  return url.includes("instagram.com/stories/") && !url.includes("/highlights/");
+}
+
+function isHighlightUrl(url: string): boolean {
+  return url.includes("instagram.com/stories/highlights/");
+}
+
+async function fetchFromPythonBackend(
+  endpoint: string,
+  url: string
+): Promise<InstagramResponse> {
+  const backendUrl =
+    process.env.PYTHON_BACKEND_URL || "http://localhost:8000";
+  const requestUrl = `${backendUrl}${endpoint}?url=${encodeURIComponent(url)}`;
+
+  const res = await fetch(requestUrl, {
+    headers: { Accept: "application/json" },
+  });
+
+  if (!res.ok) {
+    const errorBody = await res.text();
+    throw new Error(
+      `Python backend error (${res.status}): ${errorBody.slice(0, 200)}`
+    );
+  }
+
+  return res.json();
+}
+
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const instagramUrl = searchParams.get("url");
@@ -28,15 +58,61 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  // --- Story & Highlight → forward to Python backend (yt-dlp + cookies) ---
+  if (isStoryUrl(instagramUrl)) {
+    try {
+      const data = await fetchFromPythonBackend(
+        "/instagram/story",
+        instagramUrl
+      );
+      return NextResponse.json(data);
+    } catch (err: any) {
+      console.error("Story error:", err);
+      return NextResponse.json(
+        {
+          error:
+            "Gagal mengambil story. Pastikan Python backend berjalan dan cookies sudah diset. " +
+            (err.message || ""),
+        },
+        { status: 500 }
+      );
+    }
+  }
+
+  if (isHighlightUrl(instagramUrl)) {
+    try {
+      const data = await fetchFromPythonBackend(
+        "/instagram/highlight",
+        instagramUrl
+      );
+      return NextResponse.json(data);
+    } catch (err: any) {
+      console.error("Highlight error:", err);
+      return NextResponse.json(
+        {
+          error:
+            "Gagal mengambil highlight. Pastikan Python backend berjalan dan cookies sudah diset. " +
+            (err.message || ""),
+        },
+        { status: 500 }
+      );
+    }
+  }
+
+  // --- Post & Reel → use instagram-url-direct package ---
   try {
-    // Convert /reel/ URLs to /p/ for better API compatibility
-    const apiUrl = instagramUrl.replace("/reel/", "/p/").replace("/reels/", "/p/");
+    const apiUrl = instagramUrl
+      .replace("/reel/", "/p/")
+      .replace("/reels/", "/p/");
 
     const data = await instagramGetUrl(apiUrl);
 
     if (!data || data.results_number === 0) {
       return NextResponse.json(
-        { error: "Media tidak ditemukan. Pastikan URL benar dan konten publik." },
+        {
+          error:
+            "Media tidak ditemukan. Pastikan URL benar dan konten publik.",
+        },
         { status: 404 }
       );
     }
@@ -44,7 +120,6 @@ export async function GET(request: NextRequest) {
     const description = data.post_info?.caption || "";
     const author = data.post_info?.owner_username || "";
 
-    // Carousel (multiple media items)
     if (data.results_number > 1) {
       const items: InstagramItem[] = data.media_details.map((media) => ({
         type: media.type === "video" ? "video" : "photo",
@@ -60,7 +135,6 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Single media
     const media = data.media_details[0];
     const mediaType = media.type === "video" ? "video" : "photo";
 
@@ -76,7 +150,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       {
         error:
-          err.message || "Gagal memproses URL Instagram. Pastikan URL benar dan konten publik.",
+          err.message ||
+          "Gagal memproses URL Instagram. Pastikan URL benar dan konten publik.",
       },
       { status: 500 }
     );

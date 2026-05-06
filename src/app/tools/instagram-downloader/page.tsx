@@ -148,8 +148,7 @@ export default function InstagramDownloaderPage() {
             Instagram Downloader
           </h1>
           <p className="text-white/40 text-lg max-w-md mx-auto">
-            Download video Reels, foto, dan carousel dari Instagram. Cukup paste
-            URL dan download hasilnya.
+            Download video Reels, foto, carousel, story, dan highlight dari Instagram. Cukup paste URL dan download hasilnya.
           </p>
         </motion.div>
 
@@ -166,7 +165,7 @@ export default function InstagramDownloaderPage() {
               type="text"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              placeholder="Paste URL Instagram di sini..."
+              placeholder="Paste URL Instagram (post, reel, story, highlight)..."
               className="flex-1 bg-transparent px-5 py-4 text-white placeholder-white/20 outline-none border-none text-[15px]"
               disabled={loading}
             />
@@ -366,8 +365,7 @@ export default function InstagramDownloaderPage() {
         {/* Info */}
         <div className="mt-12 text-center">
           <p className="text-white/15 text-xs">
-            Tools ini hanya untuk mendownload konten Instagram publik. Gunakan
-            dengan bijak.
+            Post & Reel: tanpa login. Story & Highlight: memerlukan Python backend + cookies Instagram.
           </p>
         </div>
       </div>
