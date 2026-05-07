@@ -95,10 +95,15 @@ export async function GET(request: NextRequest) {
 
     // Photo/slideshow type
     if ((result.type === "image" || !result.video) && result.images && result.images.length > 0) {
+      const urls = result.images
+        .map((img: string) => pickHttps(img))
+        .filter((u: string) => u.length > 0);
+
       return NextResponse.json({
         type: "photo",
-        url: pickHttps(result.images),
-        thumbnail: pickHttps(result.images),
+        url: urls[0],
+        urls,
+        thumbnail: urls[0],
         description: result.desc || "",
         author: result.author?.nickname || "",
       });

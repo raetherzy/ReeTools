@@ -2,13 +2,14 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Video, Download, Loader2, AlertCircle, CheckCircle2, ArrowLeft, Sparkles } from "lucide-react";
+import { Video, Download, Loader2, AlertCircle, CheckCircle2, ArrowLeft, Sparkles, ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 
 interface ResultData {
   type: "video" | "photo";
   url: string;
+  urls?: string[];
   thumbnail?: string;
   description?: string;
   author?: string;
@@ -21,6 +22,8 @@ export default function TikTokWatermarkPage() {
   const [result, setResult] = useState<ResultData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [downloadState, setDownloadState] = useState<"idle" | "loading" | "done">("idle");
+  const [downloadAllState, setDownloadAllState] = useState<"idle" | "loading" | "done">("idle");
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,6 +32,7 @@ export default function TikTokWatermarkPage() {
     setLoading(true);
     setError(null);
     setResult(null);
+    setCurrentImageIndex(0);
 
     try {
       const res = await fetch(`/api/tiktok?url=${encodeURIComponent(url.trim())}`);
@@ -49,17 +53,51 @@ export default function TikTokWatermarkPage() {
   const handleDownload = () => {
     if (!result) return;
 
+    const allUrls = result.urls && result.urls.length > 0 ? result.urls : [result.url];
+    const downloadUrl = allUrls[currentImageIndex] || result.url;
     const extension = result.type === "video" ? "mp4" : "jpg";
     const filename = `reetools-tiktok-${Date.now()}.${extension}`;
 
     const a = document.createElement("a");
-    a.href = `/api/tiktok/stream?url=${encodeURIComponent(result.url)}&download=1&filename=${encodeURIComponent(filename)}`;
+    a.href = `/api/tiktok/stream?url=${encodeURIComponent(downloadUrl)}&download=1&filename=${encodeURIComponent(filename)}`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
 
     setDownloadState("done");
     setTimeout(() => setDownloadState("idle"), 2000);
+  };
+
+  const handleDownloadAll = async () => {
+    if (!result || downloadAllState === "loading") return;
+
+    const allUrls = result.urls && result.urls.length > 0 ? result.urls : [result.url];
+    setDownloadAllState("loading");
+
+    for (let i = 0; i < allUrls.length; i++) {
+      const filename = `reetools-tiktok-${Date.now()}-${i + 1}.jpg`;
+      const streamUrl = `/api/tiktok/stream?url=${encodeURIComponent(allUrls[i])}&download=1&filename=${encodeURIComponent(filename)}`;
+
+      try {
+        const res = await fetch(streamUrl);
+        const blob = await res.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = blobUrl;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(blobUrl);
+      } catch {
+        window.open(streamUrl, "_blank");
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 400));
+    }
+
+    setDownloadAllState("done");
+    setTimeout(() => setDownloadAllState("idle"), 2000);
   };
 
   return (
@@ -168,43 +206,129 @@ export default function TikTokWatermarkPage() {
                 />
               </div>
             ) : (
-              <div className="relative rounded-2xl overflow-hidden bg-black/40 mb-5 aspect-video">
-                <Image
-                  src={result.url}
-                  alt="TikTok photo"
-                  fill
-                  className="object-contain"
-                  unoptimized
-                />
-              </div>
+              <>
+                {(() => {
+                  const photoUrls = result.urls && result.urls.length > 0 ? result.urls : [result.url];
+                  const hasMultiple = photoUrls.length > 1;
+                  const currentImage = photoUrls[currentImageIndex] || photoUrls[0];
+
+                  return (
+                    <>
+                      <div className="relative rounded-2xl overflow-hidden bg-black/40 mb-3">
+                        {hasMultiple && (
+                          <>
+                            <button
+                              onClick={() =>
+                                setCurrentImageIndex((i) => (i === 0 ? photoUrls.length - 1 : i - 1))
+                              }
+                              className="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-black/50 hover:bg-black/70 flex items-center justify-center transition-colors"
+                            >
+                              <ChevronLeft size={20} className="text-white" />
+                            </button>
+                            <button
+                              onClick={() =>
+                                setCurrentImageIndex((i) => (i === photoUrls.length - 1 ? 0 : i + 1))
+                              }
+                              className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-black/50 hover:bg-black/70 flex items-center justify-center transition-colors"
+                            >
+                              <ChevronRight size={20} className="text-white" />
+                            </button>
+                            <div className="absolute top-3 right-3 z-10 px-2.5 py-1 rounded-full bg-black/50 text-white text-xs font-medium">
+                              {currentImageIndex + 1} / {photoUrls.length}
+                            </div>
+                          </>
+                        )}
+                        <Image
+                          src={currentImage}
+                          alt="TikTok photo"
+                          fill
+                          className="object-contain"
+                          unoptimized
+                        />
+                      </div>
+
+                      {hasMultiple && (
+                        <div className="flex gap-2 mb-5 overflow-x-auto pb-1">
+                          {photoUrls.map((imageUrl, idx) => (
+                            <button
+                              key={idx}
+                              onClick={() => setCurrentImageIndex(idx)}
+                              className={`relative w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-all ${
+                                idx === currentImageIndex
+                                  ? "border-emerald-400 opacity-100"
+                                  : "border-transparent opacity-50 hover:opacity-80"
+                              }`}
+                            >
+                              <Image
+                                src={imageUrl}
+                                alt={`Photo ${idx + 1}`}
+                                fill
+                                className="object-cover"
+                                unoptimized
+                              />
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
+              </>
             )}
 
             {result.description && (
               <p className="text-white/50 text-sm mb-5">{result.description}</p>
             )}
 
-            <button
-              onClick={handleDownload}
-              disabled={downloadState === "loading"}
-              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-semibold flex items-center justify-center gap-2 hover:from-emerald-400 hover:to-teal-400 transition-all disabled:opacity-50"
-            >
-              {downloadState === "loading" ? (
-                <>
-                  <Loader2 size={18} className="animate-spin" />
-                  Downloading...
-                </>
-              ) : downloadState === "done" ? (
-                <>
-                  <CheckCircle2 size={18} />
-                  Downloaded!
-                </>
-              ) : (
-                <>
-                  <Download size={18} />
-                  Download {result.type === "video" ? "Video" : "Foto"}
-                </>
+            <div className="space-y-3">
+              <button
+                onClick={handleDownload}
+                disabled={downloadState === "loading"}
+                className="w-full py-3.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-semibold flex items-center justify-center gap-2 hover:from-emerald-400 hover:to-teal-400 transition-all disabled:opacity-50"
+              >
+                {downloadState === "loading" ? (
+                  <>
+                    <Loader2 size={18} className="animate-spin" />
+                    Downloading...
+                  </>
+                ) : downloadState === "done" ? (
+                  <>
+                    <CheckCircle2 size={18} />
+                    Downloaded!
+                  </>
+                ) : (
+                  <>
+                    <Download size={18} />
+                    Download {result.type === "video" ? "Video" : "Foto"}
+                  </>
+                )}
+              </button>
+
+              {result.type === "photo" && result.urls && result.urls.length > 1 && (
+                <button
+                  onClick={handleDownloadAll}
+                  disabled={downloadAllState === "loading"}
+                  className="w-full py-3 rounded-xl border border-white/10 bg-white/5 text-white font-medium flex items-center justify-center gap-2 hover:bg-white/10 transition-all disabled:opacity-50"
+                >
+                  {downloadAllState === "loading" ? (
+                    <>
+                      <Loader2 size={18} className="animate-spin" />
+                      Downloading all...
+                    </>
+                  ) : downloadAllState === "done" ? (
+                    <>
+                      <CheckCircle2 size={18} />
+                      All Downloaded!
+                    </>
+                  ) : (
+                    <>
+                      <Download size={18} />
+                      Download Semua ({result.urls.length} Foto)
+                    </>
+                  )}
+                </button>
               )}
-            </button>
+            </div>
           </motion.div>
         )}
 
