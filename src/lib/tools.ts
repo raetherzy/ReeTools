@@ -10,11 +10,11 @@ export interface Tool {
 
 export const tools: Tool[] = [
   {
-    id: "tiktok-watermark",
-    name: "TikTok Watermark Remover",
-    description: "Hapus watermark video & foto TikTok tanpa mengurangi kualitas asli. Cukup paste URL dan download hasilnya.",
+    id: "tiktok",
+    name: "TikTok Tools",
+    description: "Kumpulan tools khusus TikTok: download tanpa watermark, download semua video berdasarkan username, audio downloader, dan lainnya.",
     icon: "video",
-    href: "/tools/tiktok-watermark",
+    href: "/tools/tiktok",
     status: "active",
     color: "from-pink-500 to-rose-500",
   },

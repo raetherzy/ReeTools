@@ -52,7 +52,6 @@ export default function TikTokWatermarkPage() {
     const extension = result.type === "video" ? "mp4" : "jpg";
     const filename = `reetools-tiktok-${Date.now()}.${extension}`;
 
-    // Open CDN URL directly — browser handles the download natively (no CORS for navigation)
     const a = document.createElement("a");
     a.href = `/api/tiktok/stream?url=${encodeURIComponent(result.url)}&download=1&filename=${encodeURIComponent(filename)}`;
     document.body.appendChild(a);
@@ -66,16 +65,14 @@ export default function TikTokWatermarkPage() {
   return (
     <div className="min-h-screen px-4 py-8">
       <div className="mx-auto max-w-2xl">
-        {/* Back button */}
         <Link
-          href="/"
+          href="/tools/tiktok"
           className="inline-flex items-center gap-2 text-white/40 hover:text-white/80 transition-colors mb-8"
         >
           <ArrowLeft size={18} />
-          <span className="text-sm">Back to Home</span>
+          <span className="text-sm">Back to TikTok Tools</span>
         </Link>
 
-        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -93,7 +90,6 @@ export default function TikTokWatermarkPage() {
           </p>
         </motion.div>
 
-        {/* Input Form */}
         <motion.form
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -130,7 +126,6 @@ export default function TikTokWatermarkPage() {
           </div>
         </motion.form>
 
-        {/* Error */}
         {error && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
@@ -147,7 +142,6 @@ export default function TikTokWatermarkPage() {
           </motion.div>
         )}
 
-        {/* Result */}
         {result && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -163,7 +157,6 @@ export default function TikTokWatermarkPage() {
               </span>
             </div>
 
-            {/* Preview */}
             {result.type === "video" ? (
               <div className="relative rounded-2xl overflow-hidden bg-black/40 mb-5">
                 <video
@@ -186,12 +179,10 @@ export default function TikTokWatermarkPage() {
               </div>
             )}
 
-            {/* Description */}
             {result.description && (
               <p className="text-white/50 text-sm mb-5">{result.description}</p>
             )}
 
-            {/* Download Button */}
             <button
               onClick={handleDownload}
               disabled={downloadState === "loading"}
@@ -217,7 +208,6 @@ export default function TikTokWatermarkPage() {
           </motion.div>
         )}
 
-        {/* Info */}
         <div className="mt-12 text-center">
           <p className="text-white/15 text-xs">
             Tools ini hanya untuk menghapus watermark TikTok. Gunakan dengan bijak.

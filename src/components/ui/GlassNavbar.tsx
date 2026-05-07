@@ -33,10 +33,10 @@ export function GlassNavbar() {
             </Link>
           )}
           <Link
-            href="/tools/tiktok-watermark"
+            href="/tools/tiktok"
             className="px-4 py-2 rounded-xl text-sm font-medium bg-white/[0.06] hover:bg-white/[0.1] text-white/80 hover:text-white border border-white/[0.06] hover:border-indigo-500/30 transition-all"
           >
-            TikTok Remover
+            TikTok Tools
           </Link>
         </div>
       </div>
